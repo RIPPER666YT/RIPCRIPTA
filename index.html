@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RIPCRIPTA</title>
+    <style>
+        body {
+            background-color: black;
+            color: red;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+        canvas {
+            width: 100%;
+            height: 400px;
+        }
+        #balance {
+            font-size: 24px;
+            margin: 20px 0;
+        }
+        #container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #history {
+            color: red;
+            margin-top: 20px;
+            text-align: left;
+            max-width: 600px;
+            overflow-y: auto;
+            max-height: 300px;
+            border: 1px solid red;
+            padding: 10px;
+            background-color: rgba(255, 0, 0, 0.1);
+            flex: 1;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        #stats {
+            margin-top: 20px;
+            font-size: 20px;
+            color: red;
+            text-align: left;
+            margin-left: 20px;
+        }
+        .flex-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 800px;
+            margin: auto;
+        }
+        button {
+            margin: 5px;
+            padding: 10px;
+            background-color: transparent;
+            border: none;
+            color: red;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            max-width: 200px;
+        }
+        button:hover {
+            text-decoration: underline;
+        }
+        #currentPrice {
+            font-size: 24px;
+            color: red;
+            margin-top: 10px;
+        }
+        @media (min-width: 600px) {
+            .flex-container {
+                flex-direction: row;
+                justify-content: space-between;
+            }
+            #history {
+                margin-top: 0;
+            }
+            #stats {
+                margin-left: 20px;
+            }
+            button {
+                width: auto;
+                max-width: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>RIPCRIPTA</h1>
+    <div id="balance">Баланс: 10000 рублей</div>
+    
+    <div id="container">
+        <canvas id="priceChart"></canvas>
+        <div id="currentPrice">Текущая цена RIPCOIN: 1000 рублей</div>
+        <div id="currentNPrice">Текущая цена NCOIN: 500 рублей</div>
+        <div class="flex-container">
+            <button onclick="buyRIPCOIN()">Купить RIPCOIN</button>
+            <button onclick="sellRIPCOIN()">Продать RIPCOIN</button>
+            <button onclick="buyNCOIN()">Купить NCOIN</button>
+            <button onclick="sellNCOIN()">Продать NCOIN</button>
+        </div>
+        
+        <div class="flex-container">
+            <div id="history"><h3>История</h3></div>
+            <div id="stats">
+                <h3>Статистика</h3>
+                <p id="ripcoinStats">RIPCOIN: 0 (0 рублей)</p>
+                <p id="ncoinStats">NCOIN: 0 (0 рублей)</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const ctx = document.getElementById('priceChart').getContext('2d');
+
+        // Начальные данные
+        let ripcoinPrice = parseFloat(localStorage.getItem('ripcoinPrice')) || 1000;
+        let ncoinPrice = parseFloat(localStorage.getItem('ncoinPrice')) || 500;
+        let balance = 10000;
+        let ownedRIPCOIN = 0;
+        let ownedNCOIN = 0;
+        const labels = [];
+        const data = [];
+        const ncoinData = [];
+        const history = JSON.parse(localStorage.getItem('history')) || [];
+
+        // Загрузка состояния из localStorage
+        function loadState() {
+            const savedState = JSON.parse(localStorage.getItem('cryptoState'));
+            if (savedState) {
+                balance = savedState.balance;
+                ownedRIPCOIN = savedState.ownedRIPCOIN;
+                ownedNCOIN = savedState.ownedNCOIN;
+                ripcoinPrice = savedState.ripcoinPrice || ripcoinPrice;
+                ncoinPrice = savedState.ncoinPrice || ncoinPrice;
+                history.push(...savedState.history);
+                updateStats();
+                updateHistory();
+            }
+        }
+
+        // Сохранение состояния в localStorage
+        function saveState() {
+            const state = {
+                balance,
+                ownedRIPCOIN,
+                ownedNCOIN,
+                ripcoinPrice,
+                ncoinPrice,
+                history
+            };
+            localStorage.setItem('cryptoState', JSON.stringify(state));
+            localStorage.setItem('ripcoinPrice', ripcoinPrice);
+            localStorage.setItem('ncoinPrice', ncoinPrice);
+            localStorage.setItem('history', JSON.stringify(history));
+        }
+
+        // Функция для обновления цен
+        function updatePrice() {
+            const ripcoinChange = (Math.random() - 0.5) * 200; // Изменение RIPCOIN
+            const ncoinChange = (Math.random() - 0.5) * 100; // Изменение NCOIN
+            ripcoinPrice = Math.max(0, ripcoinPrice + ripcoinChange); // Цену не может быть меньше 0
+            ncoinPrice = Math.max(0, ncoinPrice + ncoinChange); // Цену не может быть меньше 0
+            labels.push(labels.length + 1);
+            data.push(ripcoinPrice);
+            ncoinData.push(ncoinPrice);
+            updateChart();
+            document.getElementById('currentPrice').innerText = `Текущая цена RIPCOIN: ${ripcoinPrice.toFixed(2)} рублей`;
+            document.getElementById('currentNPrice').innerText = `Текущая цена NCOIN: ${ncoinPrice.toFixed(2)} рублей`;
+            saveState(); // Сохраняем состояние после обновления цен
+        }
+
+        // Настройка графика
+        const priceChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'RIPCOIN',
+                        data: data,
+                        borderColor: 'red',
+                        fill: false
+                    },
+                    {
+                        label: 'NCOIN',
+                        data: ncoinData,
+                        borderColor: 'green',
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        function updateChart() {
+            priceChart.update();
+        }
+
+        function buyRIPCOIN() {
+            const amount = prompt("Введите количество RIPCOIN для покупки:");
+            const totalCost = amount * ripcoinPrice;
+
+            if (totalCost > balance) {
+                alert("Недостаточно средств для покупки.");
+            } else {
+                balance -= totalCost;
+                ownedRIPCOIN += parseFloat(amount);
+                updateStats();
+                history.push(`Куплено ${amount} RIPCOIN за ${totalCost.toFixed(2)} рублей`);
+                updateHistory();
+                saveState();
+            }
+        }
+
+        function sellRIPCOIN() {
+            const amount = prompt("Введите количество RIPCOIN для продажи:");
+            if (amount > ownedRIPCOIN) {
+                alert("Недостаточно RIPCOIN для продажи.");
+            } else {
+                const totalSale = amount * ripcoinPrice;
+                balance += totalSale;
+                ownedRIPCOIN -= parseFloat(amount);
+                updateStats();
+                history.push(`Продано ${amount} RIPCOIN за ${totalSale.toFixed(2)} рублей`);
+                updateHistory();
+                saveState();
+            }
+        }
+
+        function buyNCOIN() {
+            const amount = prompt("Введите количество NCOIN для покупки:");
+            const totalCost = amount * ncoinPrice;
+
+            if (totalCost > balance) {
+                alert("Недостаточно средств для покупки.");
+            } else {
+                balance -= totalCost;
+                ownedNCOIN += parseFloat(amount);
+                updateStats();
+                history.push(`Куплено ${amount} NCOIN за ${totalCost.toFixed(2)} рублей`);
+                updateHistory();
+                saveState();
+            }
+        }
+
+        function sellNCOIN() {
+            const amount = prompt("Введите количество NCOIN для продажи:");
+            if (amount > ownedNCOIN) {
+                alert("Недостаточно NCOIN для продажи.");
+            } else {
+                const totalSale = amount * ncoinPrice;
+                balance += totalSale;
+                ownedNCOIN -= parseFloat(amount);
+                updateStats();
+                history.push(`Продано ${amount} NCOIN за ${totalSale.toFixed(2)} рублей`);
+                updateHistory();
+                saveState();
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('balance').innerText = `Баланс: ${balance.toFixed(2)} рублей`;
+            document.getElementById('ripcoinStats').innerText = `RIPCOIN: ${ownedRIPCOIN} (${(ownedRIPCOIN * ripcoinPrice).toFixed(2)} рублей)`;
+            document.getElementById('ncoinStats').innerText = `NCOIN: ${ownedNCOIN} (${(ownedNCOIN * ncoinPrice).toFixed(2)} рублей)`;
+        }
+
+        function updateHistory() {
+            const historyDiv = document.getElementById('history');
+            historyDiv.innerHTML = `<h3>История</h3>` + history.map(entry => `<p>${entry}</p>`).join('');
+        }
+
+        // Запуск обновления цен каждую минуту
+        setInterval(updatePrice, 5000);
+        loadState(); // Загружаем состояние при загрузке страницы
+    </script>
+</body>
+</html>
