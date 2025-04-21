@@ -6,288 +6,917 @@
     <title>RIPCRIPTA</title>
     <style>
         body {
-            background-color: black;
-            color: red;
-            font-family: Arial, sans-serif;
+            background-color: #111;
+            color: #ff5555;
+            font-family: 'Courier New', monospace;
             text-align: center;
             margin: 0;
             padding: 20px;
+            background-image: 
+                radial-gradient(circle at 25% 25%, rgba(255, 85, 85, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(255, 85, 85, 0.1) 0%, transparent 50%),
+                linear-gradient(to bottom, #111111, #1a1a1a);
+            background-attachment: fixed;
+            position: relative;
+            overflow-x: hidden;
         }
+
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0,100 L10,90 L20,95 L30,70 L40,80 L50,60 L60,85 L70,75 L80,90 L90,65 L100,70 L100,100 Z" fill="none" stroke="rgba(255,85,85,0.05)" stroke-width="0.5"/></svg>'),
+                url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0,70 L10,75 L20,60 L30,85 L40,65 L50,90 L60,70 L70,80 L80,55 L90,95 L100,60 L100,100 Z" fill="none" stroke="rgba(255,170,0,0.05)" stroke-width="0.5"/></svg>'),
+                url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0,60 L10,85 L20,70 L30,95 L40,65 L50,80 L60,55 L70,90 L80,70 L90,75 L100,60 L100,100 Z" fill="none" stroke="rgba(85,255,85,0.05)" stroke-width="0.5"/></svg>');
+            background-size: 200% 200%, 150% 150%, 180% 180%;
+            background-position: 0% 0%, 50% 50%, 100% 100%;
+            background-repeat: no-repeat;
+            z-index: -1;
+            opacity: 0.7;
+            animation: moveBackground 60s linear infinite;
+        }
+
+        @keyframes moveBackground {
+            0% {
+                background-position: 0% 0%, 50% 50%, 100% 100%;
+            }
+            50% {
+                background-position: 100% 100%, 0% 0%, 50% 50%;
+            }
+            100% {
+                background-position: 0% 0%, 50% 50%, 100% 100%;
+            }
+        }
+
         canvas {
             width: 100%;
             height: 400px;
+            background: #000;
+            border: 1px solid #ff5555;
+            margin: 10px 0;
         }
         #balance {
             font-size: 24px;
             margin: 20px 0;
+            color: #ffaa00;
         }
         #container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        #game-section, #leaderboard-section {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border: 1px solid #ff5555;
+            border-radius: 5px;
+            position: relative;
         }
         #history {
-            color: red;
-            margin-top: 20px;
+            color: #ff8888;
             text-align: left;
-            max-width: 600px;
-            overflow-y: auto;
             max-height: 300px;
-            border: 1px solid red;
+            overflow-y: auto;
             padding: 10px;
-            background-color: rgba(255, 0, 0, 0.1);
-            flex: 1;
-            width: 100%;
-            box-sizing: border-box;
+            background-color: rgba(255, 0, 0, 0.05);
+            margin: 10px 0;
         }
         #stats {
             margin-top: 20px;
-            font-size: 20px;
-            color: red;
+            font-size: 18px;
+            color: #ff8888;
             text-align: left;
-            margin-left: 20px;
+            padding: 10px;
+            background-color: rgba(255, 0, 0, 0.05);
         }
-        .flex-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-            max-width: 800px;
-            margin: auto;
+        .button-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin: 20px 0;
         }
         button {
-            margin: 5px;
-            padding: 10px;
-            background-color: transparent;
-            border: none;
-            color: red;
+            padding: 12px;
+            background-color: #222;
+            border: 1px solid;
+            color: #ff5555;
             font-size: 16px;
             cursor: pointer;
-            width: 100%;
-            max-width: 200px;
+            transition: all 0.3s;
+            border-radius: 5px;
         }
         button:hover {
-            text-decoration: underline;
+            background-color: #ff5555;
+            color: #000;
         }
-        #currentPrice {
-            font-size: 24px;
-            color: red;
+        .price-display {
+            font-size: 18px;
+            margin: 10px 0;
+            padding: 8px;
+            background-color: rgba(255, 85, 85, 0.1);
+            border-left: 3px solid;
+        }
+        #bankruptcyWarning {
+            color: #ff0000;
+            font-weight: bold;
+            background-color: rgba(255, 0, 0, 0.1);
+            padding: 10px;
+            display: none;
+            border: 1px solid #ff0000;
+            border-radius: 5px;
+        }
+        #resetBtn {
+            background-color: rgba(255, 0, 0, 0.2);
+            border-color: #ff0000;
+            margin: 20px auto;
+            display: block;
+            width: 200px;
+        }
+        #playersOnline {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 5px 10px;
+            border: 1px solid #ff5555;
+            border-radius: 5px;
+        }
+        #leaderboard {
+            max-height: 500px;
+            overflow-y: auto;
+            text-align: left;
             margin-top: 10px;
         }
-        @media (min-width: 600px) {
-            .flex-container {
-                flex-direction: row;
-                justify-content: space-between;
+        .player-row {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            padding: 8px;
+            border-bottom: 1px solid #333;
+        }
+        .player-row.header {
+            font-weight: bold;
+            background: rgba(255, 85, 85, 0.2);
+        }
+        #search-player {
+            width: 90%;
+            padding: 8px;
+            margin: 10px 0;
+            background: #222;
+            border: 1px solid #ff5555;
+            color: white;
+            border-radius: 15px;
+            outline: none;
+        }
+        #info-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            width: 24px;
+            height: 24px;
+        }
+        #info-btn svg {
+            fill: #ff5555;
+            transition: all 0.3s;
+        }
+        #info-btn:hover svg {
+            fill: #ff0000;
+            transform: scale(1.1);
+        }
+        #info-modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #111;
+            border: 2px solid #ff5555;
+            border-radius: 5px;
+            padding: 20px;
+            max-width: 600px;
+            width: 90%;
+            z-index: 1000;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        #info-modal h2 {
+            color: #ffaa00;
+            margin-top: 0;
+        }
+        #info-modal ul {
+            text-align: left;
+            padding-left: 20px;
+        }
+        #info-modal li {
+            margin-bottom: 10px;
+        }
+        #close-modal {
+            background-color: #ff5555;
+            color: #000;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+        #overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 999;
+        }
+        @media (max-width: 768px) {
+            #container {
+                grid-template-columns: 1fr;
             }
-            #history {
-                margin-top: 0;
-            }
-            #stats {
-                margin-left: 20px;
-            }
-            button {
-                width: auto;
-                max-width: none;
+            .button-container {
+                grid-template-columns: 1fr;
             }
         }
     </style>
 </head>
 <body>
-
-    <h1>RIPCRIPTA</h1>
-    <div id="balance">Баланс: 10000 рублей</div>
-    
+    <div id="playersOnline">Игроков: 0</div>
     <div id="container">
-        <canvas id="priceChart"></canvas>
-        <div id="currentPrice">Текущая цена RIPCOIN: 1000 рублей</div>
-        <div id="currentNPrice">Текущая цена NCOIN: 500 рублей</div>
-        <div class="flex-container">
-            <button onclick="buyRIPCOIN()">Купить RIPCOIN</button>
-            <button onclick="sellRIPCOIN()">Продать RIPCOIN</button>
-            <button onclick="buyNCOIN()">Купить NCOIN</button>
-            <button onclick="sellNCOIN()">Продать NCOIN</button>
-        </div>
-        
-        <div class="flex-container">
-            <div id="history"><h3>История</h3></div>
+        <div id="game-section">
+            <button id="info-btn" title="Информация о игре">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+                </svg>
+            </button>
+            <h1>RIPCRIPTA</h1>
+            <div id="balance">Баланс: 10000 рублей</div>
+            <div id="bankruptcyWarning">ВНИМАНИЕ: Ваш баланс критически низок!</div>
+            
+            <canvas id="priceChart"></canvas>
+            
+            <div class="price-display" style="border-left-color: red;" id="currentPrice">RIPCOIN: 1000 рублей</div>
+            <div class="price-display" style="border-left-color: green;" id="currentNPrice">NCOIN: 500 рублей</div>
+            <div class="price-display" style="border-left-color: blue;" id="currentFPrice">FCOIN: 300 рублей</div>
+            <div class="price-display" style="border-left-color: purple;" id="currentTPrice">TWITCHCOIN: 200 рублей</div>
+            
+            <div class="button-container">
+                <button onclick="buyCoin('RIPCOIN')" style="border-color: red;">Купить RIPCOIN</button>
+                <button onclick="sellCoin('RIPCOIN')" style="border-color: red;">Продать RIPCOIN</button>
+                <button onclick="buyCoin('NCOIN')" style="border-color: green;">Купить NCOIN</button>
+                <button onclick="sellCoin('NCOIN')" style="border-color: green;">Продать NCOIN</button>
+                <button onclick="buyCoin('FCOIN')" style="border-color: blue;">Купить FCOIN</button>
+                <button onclick="sellCoin('FCOIN')" style="border-color: blue;">Продать FCOIN</button>
+                <button onclick="buyCoin('TWITCHCOIN')" style="border-color: purple;">Купить TWITCHCOIN</button>
+                <button onclick="sellCoin('TWITCHCOIN')" style="border-color: purple;">Продать TWITCHCOIN</button>
+            </div>
+            
             <div id="stats">
-                <h3>Статистика</h3>
+                <h3>Ваши активы</h3>
                 <p id="ripcoinStats">RIPCOIN: 0 (0 рублей)</p>
                 <p id="ncoinStats">NCOIN: 0 (0 рублей)</p>
+                <p id="fcoinStats">FCOIN: 0 (0 рублей)</p>
+                <p id="tcoinStats">TWITCHCOIN: 0 (0 рублей)</p>
+                <p id="totalValue">Общая стоимость: 0 рублей</p>
+            </div>
+            
+            <div id="history"><h3>История операций</h3></div>
+
+            <button id="resetBtn" onclick="resetGame()">Начать заново</button>
+        </div>
+
+        <div id="leaderboard-section">
+            <h2>Топ игроков</h2>
+            <input type="text" id="search-player" placeholder="Поиск по имени" oninput="searchPlayer()">
+            <div id="leaderboard">
+                <div class="player-row header">
+                    <div>Место</div>
+                    <div>Имя</div>
+                    <div>Капитал</div>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- Модальное окно с информацией -->
+    <div id="overlay"></div>
+    <div id="info-modal">
+        <h2>Как играть в RIPCRIPTA</h2>
+        <ul>
+            <li><strong>Цель игры:</strong> Заработать как можно больше денег, покупая и продавая криптовалюту</li>
+            <li><strong>Цены обновляются:</strong> Каждые 10 секунд</li>
+            <li><strong>Комиссия за сделки:</strong> 5% от суммы сделки</li>
+            <li><strong>События рынка:</strong> Случайные события (бумы и крахи) происходят с вероятностью 5% при каждом обновлении цен</li>
+            <li><strong>Покупка/продажа:</strong> Можно покупать/продавать только целое количество коинов</li>
+            <li><strong>Кулдаун:</strong> 5 секунд между сделками</li>
+            <li><strong>Мультиплеер:</strong> Все игроки видят одинаковые цены в реальном времени</li>
+            <li><strong>Банкротство:</strong> Если ваш баланс уходит в минус, игра заканчивается</li>
+        </ul>
+        <button id="close-modal">Закрыть</button>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <script>
-        const ctx = document.getElementById('priceChart').getContext('2d');
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBMM2ZbjhvGitBPja9Uw7XM9neAbllt7fM",
+            authDomain: "ripcripta.firebaseapp.com",
+            databaseURL: "https://ripcripta-default-rtdb.firebaseio.com",
+            projectId: "ripcripta",
+            storageBucket: "ripcripta.firebasestorage.app",
+            messagingSenderId: "874763426471",
+            appId: "1:874763426471:web:28ddfe63b94c2d6a0c9982"
+        };
 
-        // Начальные данные
-        let ripcoinPrice = parseFloat(localStorage.getItem('ripcoinPrice')) || 1000;
-        let ncoinPrice = parseFloat(localStorage.getItem('ncoinPrice')) || 500;
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // Game constants
+        const MAX_PRICE = 100000;
+        const COMMISSION = 0.05;
+        const VOLATILITY_BASE = 100;
+        const BANKRUPTCY_THRESHOLD = 100;
+        const PRICE_UPDATE_INTERVAL = 10000; // 10 секунд
+
+        // Game state
         let balance = 10000;
-        let ownedRIPCOIN = 0;
-        let ownedNCOIN = 0;
+        let lastTradeTime = 0;
+        let playerId = localStorage.getItem('playerId') || Math.random().toString(36).substr(2, 9);
+        let playerName = localStorage.getItem('playerName') || "Игрок_" + Math.floor(Math.random() * 1000);
+        let lastPriceUpdate = 0;
+        let isMaster = false;
+        let priceUpdateInterval;
+        
+        // Save player ID and name
+        localStorage.setItem('playerId', playerId);
+        localStorage.setItem('playerName', playerName);
+        
+        const coins = {
+            RIPCOIN: { price: 1000, owned: 0, color: 'red', minPrice: 100 },
+            NCOIN: { price: 500, owned: 0, color: 'green', minPrice: 50 },
+            FCOIN: { price: 300, owned: 0, color: 'blue', minPrice: 30 },
+            TWITCHCOIN: { price: 200, owned: 0, color: 'purple', minPrice: 20 }
+        };
+        
         const labels = [];
-        const data = [];
-        const ncoinData = [];
-        const history = JSON.parse(localStorage.getItem('history')) || [];
+        const history = [];
+        const priceData = {
+            RIPCOIN: [],
+            NCOIN: [],
+            FCOIN: [],
+            TWITCHCOIN: []
+        };
 
-        // Загрузка состояния из localStorage
-        function loadState() {
-            const savedState = JSON.parse(localStorage.getItem('cryptoState'));
-            if (savedState) {
-                balance = savedState.balance;
-                ownedRIPCOIN = savedState.ownedRIPCOIN;
-                ownedNCOIN = savedState.ownedNCOIN;
-                ripcoinPrice = savedState.ripcoinPrice || ripcoinPrice;
-                ncoinPrice = savedState.ncoinPrice || ncoinPrice;
-                history.push(...savedState.history);
-                updateStats();
-                updateHistory();
-            }
-        }
-
-        // Сохранение состояния в localStorage
-        function saveState() {
-            const state = {
-                balance,
-                ownedRIPCOIN,
-                ownedNCOIN,
-                ripcoinPrice,
-                ncoinPrice,
-                history
-            };
-            localStorage.setItem('cryptoState', JSON.stringify(state));
-            localStorage.setItem('ripcoinPrice', ripcoinPrice);
-            localStorage.setItem('ncoinPrice', ncoinPrice);
-            localStorage.setItem('history', JSON.stringify(history));
-        }
-
-        // Функция для обновления цен
-        function updatePrice() {
-            const ripcoinChange = (Math.random() - 0.5) * 200; // Изменение RIPCOIN
-            const ncoinChange = (Math.random() - 0.5) * 100; // Изменение NCOIN
-            ripcoinPrice = Math.max(0, ripcoinPrice + ripcoinChange); // Цену не может быть меньше 0
-            ncoinPrice = Math.max(0, ncoinPrice + ncoinChange); // Цену не может быть меньше 0
-            labels.push(labels.length + 1);
-            data.push(ripcoinPrice);
-            ncoinData.push(ncoinPrice);
-            updateChart();
-            document.getElementById('currentPrice').innerText = `Текущая цена RIPCOIN: ${ripcoinPrice.toFixed(2)} рублей`;
-            document.getElementById('currentNPrice').innerText = `Текущая цена NCOIN: ${ncoinPrice.toFixed(2)} рублей`;
-            saveState(); // Сохраняем состояние после обновления цен
-        }
-
-        // Настройка графика
+        // Chart initialization
+        const ctx = document.getElementById('priceChart').getContext('2d');
         const priceChart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: labels,
-                datasets: [
-                    {
-                        label: 'RIPCOIN',
-                        data: data,
-                        borderColor: 'red',
-                        fill: false
-                    },
-                    {
-                        label: 'NCOIN',
-                        data: ncoinData,
-                        borderColor: 'green',
-                        fill: false
-                    }
-                ]
+                datasets: Object.keys(coins).map(coinName => ({
+                    label: coinName,
+                    data: priceData[coinName],
+                    borderColor: coins[coinName].color,
+                    borderWidth: 2,
+                    fill: false,
+                    tension: 0.1
+                }))
             },
             options: {
+                responsive: true,
                 scales: {
                     y: {
-                        beginAtZero: true
+                        beginAtZero: true,
+                        suggestedMax: MAX_PRICE,
+                        ticks: {
+                            color: '#ff8888',
+                            callback: function(value) {
+                                return value.toLocaleString('ru-RU') + ' ₽';
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(255, 85, 85, 0.1)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            color: 'rgba(255, 85, 85, 0.1)'
+                        },
+                        ticks: {
+                            color: '#ff8888'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#ff8888'
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + context.parsed.y.toLocaleString('ru-RU') + ' ₽';
+                            }
+                        }
                     }
                 }
             }
         });
 
-        function updateChart() {
-            priceChart.update();
+        // Info modal functionality
+        document.getElementById('info-btn').addEventListener('click', function() {
+            document.getElementById('info-modal').style.display = 'block';
+            document.getElementById('overlay').style.display = 'block';
+        });
+
+        document.getElementById('close-modal').addEventListener('click', function() {
+            document.getElementById('info-modal').style.display = 'none';
+            document.getElementById('overlay').style.display = 'none';
+        });
+
+        document.getElementById('overlay').addEventListener('click', function() {
+            document.getElementById('info-modal').style.display = 'none';
+            this.style.display = 'none';
+        });
+
+        // Initialize game
+        function initGame() {
+            // Load saved data
+            const savedData = JSON.parse(localStorage.getItem('ripcriptaData'));
+            if (savedData) {
+                balance = savedData.balance || balance;
+                playerName = savedData.playerName || playerName;
+                for (const coin in savedData.coins) {
+                    if (coins[coin]) {
+                        coins[coin].owned = Math.floor(savedData.coins[coin].owned) || 0;
+                    }
+                }
+                history.push(...(savedData.history || []));
+            }
+            
+            setupFirebaseListeners();
+            updateUI();
+            updateLeaderboard();
+            
+            // Set player name if not set
+            if (!localStorage.getItem('playerNameSet')) {
+                setTimeout(() => {
+                    const name = prompt("Введите ваше имя для таблицы лидеров:", playerName);
+                    if (name && name.trim() !== "") {
+                        playerName = name.trim().substring(0, 20);
+                        localStorage.setItem('playerName', playerName);
+                        localStorage.setItem('playerNameSet', 'true');
+                        saveGame();
+                    }
+                }, 1000);
+            }
+
+            // Check for existing master and prices
+            checkMasterStatus();
+            
+            // Regular master checks
+            setInterval(checkMasterStatus, 10000);
         }
 
-        function buyRIPCOIN() {
-            const amount = prompt("Введите количество RIPCOIN для покупки:");
-            const totalCost = amount * ripcoinPrice;
+        function checkMasterStatus() {
+            const now = Date.now();
+            
+            // Check if we have prices and they're recent
+            database.ref('prices').once('value').then((priceSnapshot) => {
+                const prices = priceSnapshot.val();
+                const pricesExist = prices && Object.keys(prices).length > 0;
+                const pricesRecent = prices && prices.RIPCOIN && (now - prices.RIPCOIN.timestamp) < PRICE_UPDATE_INTERVAL * 2;
+                
+                // If prices don't exist or are too old, check for master
+                if (!pricesExist || !pricesRecent) {
+                    database.ref('master').once('value').then((masterSnapshot) => {
+                        const master = masterSnapshot.val();
+                        const masterActive = master && (now - master.lastActive) < 15000;
+                        
+                        // If no active master, try to become one
+                        if (!masterActive && !isMaster) {
+                            tryBecomeMaster();
+                        }
+                    });
+                }
+            });
+        }
 
-            if (totalCost > balance) {
-                alert("Недостаточно средств для покупки.");
-            } else {
-                balance -= totalCost;
-                ownedRIPCOIN += parseFloat(amount);
-                updateStats();
-                history.push(`Куплено ${amount} RIPCOIN за ${totalCost.toFixed(2)} рублей`);
+        function tryBecomeMaster() {
+            const now = Date.now();
+            const masterRef = database.ref('master');
+            
+            // Use transaction to ensure only one master
+            masterRef.transaction((currentMaster) => {
+                if (currentMaster === null || now - currentMaster.lastActive > 15000) {
+                    return { 
+                        playerId: playerId,
+                        lastActive: now
+                    };
+                }
+                return currentMaster; // abort if someone else is master
+            }, (error, committed) => {
+                if (error) {
+                    console.error("Master transaction failed:", error);
+                } else if (committed) {
+                    console.log("Стал мастером");
+                    isMaster = true;
+                    updatePrices(); // Immediate update
+                    if (priceUpdateInterval) clearInterval(priceUpdateInterval);
+                    priceUpdateInterval = setInterval(updatePrices, PRICE_UPDATE_INTERVAL);
+                    
+                    // Mark ourselves as master in players list
+                    database.ref('players/' + playerId).update({
+                        isMaster: true
+                    });
+                }
+            });
+        }
+
+        // Setup Firebase listeners
+        function setupFirebaseListeners() {
+            // Listen for price updates
+            database.ref('prices').on('value', (snapshot) => {
+                const prices = snapshot.val();
+                if (prices) {
+                    lastPriceUpdate = Date.now();
+                    
+                    for (const coin in prices) {
+                        if (coins[coin]) {
+                            coins[coin].price = prices[coin].price;
+                            priceData[coin].push(prices[coin].price);
+                            
+                            if (priceData[coin].length > 100) {
+                                priceData[coin].shift();
+                            }
+                        }
+                    }
+                    
+                    // Use local time for labels
+                    const now = new Date();
+                    labels.push(now.getHours() + ':' + now.getMinutes().toString().padStart(2, '0'));
+                    if (labels.length > 100) labels.shift();
+                    
+                    updatePriceDisplays();
+                    priceChart.update();
+                    
+                    if (prices.event) {
+                        history.unshift(prices.event);
+                        updateHistory();
+                    }
+                }
+            });
+            
+            // Listen for player count
+            database.ref('players').on('value', (snapshot) => {
+                const players = snapshot.val() || {};
+                document.getElementById('playersOnline').innerText = `Игроков: ${Object.keys(players).length}`;
+            });
+            
+            // Register player
+            updatePlayerData();
+            
+            // Update player activity every minute
+            setInterval(updatePlayerData, 60000);
+        }
+
+        // Update prices function
+        function updatePrices() {
+            const now = Date.now();
+            lastPriceUpdate = now;
+            
+            // Update master activity
+            database.ref('master').update({
+                lastActive: now
+            });
+            
+            const newPrices = {};
+            for (const coin in coins) {
+                const change = (Math.random() - 0.5) * (VOLATILITY_BASE / 50);
+                coins[coin].price = Math.max(
+                    coins[coin].minPrice,
+                    Math.min(MAX_PRICE, coins[coin].price * (1 + change))
+                );
+                newPrices[coin] = {
+                    price: coins[coin].price,
+                    timestamp: now
+                };
+            }
+            
+            // 5% chance for random event
+            if (Math.random() < 0.05) {
+                const coinNames = Object.keys(coins);
+                const randomCoin = coinNames[Math.floor(Math.random() * coinNames.length)];
+                const eventType = Math.random() > 0.5 ? 'boom' : 'crash';
+                const multiplier = eventType === 'boom' ? 1.5 : 0.7;
+                
+                newPrices[randomCoin].price = Math.max(
+                    coins[randomCoin].minPrice,
+                    Math.min(MAX_PRICE, newPrices[randomCoin].price * multiplier)
+                );
+                
+                newPrices.event = eventType === 'boom' 
+                    ? `🚀 Бум ${randomCoin}! Цена выросла на 50%` 
+                    : `⚡ Крах ${randomCoin}! Цена упала на 30%`;
+                
+                history.unshift(newPrices.event);
                 updateHistory();
-                saveState();
+            }
+            
+            database.ref('prices').set(newPrices)
+                .then(() => console.log("Цены успешно обновлены"))
+                .catch(error => console.error("Ошибка обновления цен:", error));
+        }
+
+        // Update player data in Firebase
+        function updatePlayerData() {
+            const totalValue = calculateTotalValue();
+            
+            const playerData = {
+                name: playerName,
+                balance: balance,
+                coins: {
+                    RIPCOIN: coins.RIPCOIN.owned,
+                    NCOIN: coins.NCOIN.owned,
+                    FCOIN: coins.FCOIN.owned,
+                    TWITCHCOIN: coins.TWITCHCOIN.owned
+                },
+                totalValue: totalValue,
+                lastActive: Date.now()
+            };
+            
+            if (isMaster) {
+                playerData.isMaster = true;
+            }
+            
+            database.ref('players/' + playerId).set(playerData)
+            .then(() => console.log("Данные игрока обновлены"))
+            .catch(error => console.error("Ошибка обновления данных игрока:", error));
+            
+            updateLeaderboard();
+        }
+
+        // Calculate total player value
+        function calculateTotalValue() {
+            return Object.values(coins).reduce(
+                (sum, coin) => sum + (coin.owned * coin.price), balance
+            );
+        }
+
+        // Update leaderboard
+        function updateLeaderboard() {
+            database.ref('players').once('value').then((snapshot) => {
+                const players = snapshot.val() || {};
+                const playersArray = [];
+                
+                for (const id in players) {
+                    if (players[id].totalValue) {
+                        playersArray.push({
+                            id: id,
+                            name: players[id].name || "Аноним",
+                            totalValue: players[id].totalValue,
+                            isYou: id === playerId
+                        });
+                    }
+                }
+                
+                // Sort by total value (descending)
+                playersArray.sort((a, b) => b.totalValue - a.totalValue);
+                
+                // Display top 100 players
+                displayLeaderboard(playersArray);
+            });
+        }
+
+        // Display leaderboard
+        function displayLeaderboard(players) {
+            const leaderboard = document.getElementById('leaderboard');
+            let html = `
+                <div class="player-row header">
+                    <div>Место</div>
+                    <div>Имя</div>
+                    <div>Капитал</div>
+                </div>
+            `;
+            
+            players.slice(0, 100).forEach((player, index) => {
+                html += `
+                    <div class="player-row" style="${player.isYou ? 'background: rgba(255, 215, 0, 0.2);' : ''}">
+                        <div>${index + 1}</div>
+                        <div>${player.name}</div>
+                        <div>${player.totalValue.toLocaleString('ru-RU')} ₽</div>
+                    </div>
+                `;
+            });
+            
+            leaderboard.innerHTML = html;
+        }
+
+        // Search player by name
+        function searchPlayer() {
+            const searchTerm = document.getElementById('search-player').value.toLowerCase();
+            if (!searchTerm) {
+                updateLeaderboard();
+                return;
+            }
+            
+            database.ref('players').once('value').then((snapshot) => {
+                const players = snapshot.val() || {};
+                const playersArray = [];
+                
+                for (const id in players) {
+                    if (players[id].name && players[id].name.toLowerCase().includes(searchTerm)) {
+                        playersArray.push({
+                            id: id,
+                            name: players[id].name,
+                            totalValue: players[id].totalValue || 0,
+                            isYou: id === playerId
+                        });
+                    }
+                }
+                
+                // Sort by total value (descending)
+                playersArray.sort((a, b) => b.totalValue - a.totalValue);
+                
+                // Display search results
+                displayLeaderboard(playersArray);
+            });
+        }
+
+        // Save game state
+        function saveGame() {
+            const dataToSave = {
+                balance,
+                playerName,
+                coins: {
+                    RIPCOIN: { owned: coins.RIPCOIN.owned },
+                    NCOIN: { owned: coins.NCOIN.owned },
+                    FCOIN: { owned: coins.FCOIN.owned },
+                    TWITCHCOIN: { owned: coins.TWITCHCOIN.owned }
+                },
+                history: history.slice(-50)
+            };
+            localStorage.setItem('ripcriptaData', JSON.stringify(dataToSave));
+            
+            // Update player data in Firebase
+            updatePlayerData();
+        }
+
+        // Trade functions (only whole coins)
+        function tradeCoin(coinName, isBuy) {
+            const now = Date.now();
+            const cooldown = 5000;
+            
+            if (now - lastTradeTime < cooldown) {
+                const remaining = Math.ceil((cooldown - (now - lastTradeTime)) / 1000);
+                alert(`Подождите ${remaining} секунд перед следующей сделкой`);
+                return;
+            }
+            
+            const coin = coins[coinName];
+            const action = isBuy ? 'Купить' : 'Продать';
+            const amountInput = prompt(`Введите количество ${coinName} для ${action.toLowerCase()}я (только целые числа):`);
+            
+            if (!amountInput) return;
+            
+            const amount = parseInt(amountInput);
+            if (isNaN(amount)) {
+                alert("Введите целое число!");
+                return;
+            }
+            
+            if (amount <= 0) {
+                alert("Количество должно быть больше 0!");
+                return;
+            }
+            
+            let success = false;
+            let message = "";
+            
+            if (isBuy) {
+                const maxBuy = Math.floor((balance / coin.price) * (1 - COMMISSION));
+                const actualAmount = Math.min(amount, maxBuy);
+                const totalCost = actualAmount * coin.price * (1 + COMMISSION);
+                
+                if (actualAmount <= 0) {
+                    alert(`Недостаточно средств. Максимум можно купить: ${maxBuy} ${coinName}`);
+                } else {
+                    balance -= totalCost;
+                    coin.owned += actualAmount;
+                    message = `${action}но ${actualAmount} ${coinName} за ${totalCost.toFixed(2)} рублей (комиссия ${COMMISSION * 100}%)`;
+                    success = true;
+                }
+            } else {
+                if (amount > coin.owned) {
+                    alert(`Недостаточно ${coinName} для продажи. Доступно: ${coin.owned}`);
+                } else {
+                    const totalSale = amount * coin.price * (1 - COMMISSION);
+                    balance += totalSale;
+                    coin.owned -= amount;
+                    message = `Продано ${amount} ${coinName} за ${totalSale.toFixed(2)} рублей (комиссия ${COMMISSION * 100}%)`;
+                    success = true;
+                }
+            }
+            
+            if (success) {
+                lastTradeTime = now;
+                history.unshift(message);
+                updateUI();
+                checkBankruptcy();
+                saveGame();
             }
         }
 
-        function sellRIPCOIN() {
-            const amount = prompt("Введите количество RIPCOIN для продажи:");
-            if (amount > ownedRIPCOIN) {
-                alert("Недостаточно RIPCOIN для продажи.");
-            } else {
-                const totalSale = amount * ripcoinPrice;
-                balance += totalSale;
-                ownedRIPCOIN -= parseFloat(amount);
-                updateStats();
-                history.push(`Продано ${amount} RIPCOIN за ${totalSale.toFixed(2)} рублей`);
-                updateHistory();
-                saveState();
-            }
+        function buyCoin(coinName) {
+            tradeCoin(coinName, true);
         }
 
-        function buyNCOIN() {
-            const amount = prompt("Введите количество NCOIN для покупки:");
-            const totalCost = amount * ncoinPrice;
-
-            if (totalCost > balance) {
-                alert("Недостаточно средств для покупки.");
-            } else {
-                balance -= totalCost;
-                ownedNCOIN += parseFloat(amount);
-                updateStats();
-                history.push(`Куплено ${amount} NCOIN за ${totalCost.toFixed(2)} рублей`);
-                updateHistory();
-                saveState();
-            }
+        function sellCoin(coinName) {
+            tradeCoin(coinName, false);
         }
 
-        function sellNCOIN() {
-            const amount = prompt("Введите количество NCOIN для продажи:");
-            if (amount > ownedNCOIN) {
-                alert("Недостаточно NCOIN для продажи.");
-            } else {
-                const totalSale = amount * ncoinPrice;
-                balance += totalSale;
-                ownedNCOIN -= parseFloat(amount);
-                updateStats();
-                history.push(`Продано ${amount} NCOIN за ${totalSale.toFixed(2)} рублей`);
-                updateHistory();
-                saveState();
-            }
-        }
-
-        function updateStats() {
+        // UI updates
+        function updateUI() {
             document.getElementById('balance').innerText = `Баланс: ${balance.toFixed(2)} рублей`;
-            document.getElementById('ripcoinStats').innerText = `RIPCOIN: ${ownedRIPCOIN} (${(ownedRIPCOIN * ripcoinPrice).toFixed(2)} рублей)`;
-            document.getElementById('ncoinStats').innerText = `NCOIN: ${ownedNCOIN} (${(ownedNCOIN * ncoinPrice).toFixed(2)} рублей)`;
+            document.getElementById('ripcoinStats').innerText = 
+                `RIPCOIN: ${coins.RIPCOIN.owned} (${(coins.RIPCOIN.owned * coins.RIPCOIN.price).toFixed(2)} рублей)`;
+            document.getElementById('ncoinStats').innerText = 
+                `NCOIN: ${coins.NCOIN.owned} (${(coins.NCOIN.owned * coins.NCOIN.price).toFixed(2)} рублей)`;
+            document.getElementById('fcoinStats').innerText = 
+                `FCOIN: ${coins.FCOIN.owned} (${(coins.FCOIN.owned * coins.FCOIN.price).toFixed(2)} рублей)`;
+            document.getElementById('tcoinStats').innerText = 
+                `TWITCHCOIN: ${coins.TWITCHCOIN.owned} (${(coins.TWITCHCOIN.owned * coins.TWITCHCOIN.price).toFixed(2)} рублей)`;
+            
+            const totalValue = calculateTotalValue();
+            document.getElementById('totalValue').innerText = 
+                `Общая стоимость: ${totalValue.toLocaleString('ru-RU')} рублей`;
+            
+            updatePriceDisplays();
+            updateHistory();
+        }
+
+        function updatePriceDisplays() {
+            document.getElementById('currentPrice').innerText = 
+                `RIPCOIN: ${coins.RIPCOIN.price.toLocaleString('ru-RU')} рублей`;
+            document.getElementById('currentNPrice').innerText = 
+                `NCOIN: ${coins.NCOIN.price.toLocaleString('ru-RU')} рублей`;
+            document.getElementById('currentFPrice').innerText = 
+                `FCOIN: ${coins.FCOIN.price.toLocaleString('ru-RU')} рублей`;
+            document.getElementById('currentTPrice').innerText = 
+                `TWITCHCOIN: ${coins.TWITCHCOIN.price.toLocaleString('ru-RU')} рублей`;
         }
 
         function updateHistory() {
             const historyDiv = document.getElementById('history');
-            historyDiv.innerHTML = `<h3>История</h3>` + history.map(entry => `<p>${entry}</p>`).join('');
+            historyDiv.innerHTML = `<h3>История операций</h3>` + 
+                history.slice(0, 20).map(entry => `<p>${entry}</p>`).join('');
         }
 
-        // Запуск обновления цен каждую минуту
-        setInterval(updatePrice, 5000);
-        loadState(); // Загружаем состояние при загрузке страницы
+        // Game management
+        function checkBankruptcy() {
+            const bankruptcyWarning = document.getElementById('bankruptcyWarning');
+            if (balance < BANKRUPTCY_THRESHOLD) {
+                bankruptcyWarning.style.display = 'block';
+                
+                if (balance <= 0) {
+                    setTimeout(() => {
+                        if (confirm('Вы банкрот! Начать заново?')) {
+                            resetGame();
+                        }
+                    }, 500);
+                }
+            } else {
+                bankruptcyWarning.style.display = 'none';
+            }
+        }
+
+        function resetGame() {
+            if (confirm('Вы уверены, что хотите начать заново? Все ваши данные будут удалены!')) {
+                localStorage.removeItem('ripcriptaData');
+                localStorage.removeItem('playerNameSet');
+                if (priceUpdateInterval) clearInterval(priceUpdateInterval);
+                database.ref('players/' + playerId).remove();
+                if (isMaster) {
+                    database.ref('master').remove();
+                }
+                location.reload();
+            }
+        }
+
+        // Start the game
+        initGame();
     </script>
 </body>
 </html>
